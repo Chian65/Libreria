@@ -1,23 +1,25 @@
 package com.libreria.libro;
 
 import com.libreria.models.Autore;
+import com.libreria.models.Categoria;
 import com.libreria.models.Libro;
 import com.libreria.repositories.LibroRepository;
 import com.libreria.services.LibroService;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class LibroServiceTest {
+@ExtendWith(MockitoExtension.class)
+class LibroServiceTest {
 
 	@InjectMocks
 	private LibroService libroService;
@@ -25,49 +27,38 @@ public class LibroServiceTest {
 	@Mock
 	private LibroRepository libroRepository;
 
-	@BeforeEach
-	void setUp() {
-		MockitoAnnotations.openMocks(this);
+	private Autore createAutore() {
+		return new Autore(1L, "Angelo", "Ceppari", Collections.emptyList());
+	}
+
+	private Libro createLibroInput(Autore autore) {
+		return new Libro(null, "Prova", 1, 234, autore, new ArrayList<Categoria>());
+	}
+
+	private Libro createLibroSaved(Autore autore) {
+		return new Libro(1L, "Prova", 1, 234, autore, new ArrayList<Categoria>());
 	}
 
 	@Test
-	public void should_successfully_save_a_libro() {
-		// Arrange (Setup iniziale)
-		Autore autore = new Autore(1L, "Angelo", "Ceppari", Collections.emptyList());
+	void should_successfully_save_a_libro() {
+		Autore autore = createAutore();
+		Libro libroInput = createLibroInput(autore);
+		Libro libroSaved = createLibroSaved(autore);
 
-		Libro libro = new Libro(
-				null, // Non dovresti specificare l'ID, poiché lo stai creando e sarà assegnato dal database
-				"Prova",
-				1,
-				234,
-				autore
-		);
+		when(libroRepository.save(any(Libro.class))).thenReturn(libroSaved);
 
-		Libro savedLibro = new Libro(
-				1L, // ID assegnato dopo il salvataggio
-				"Prova",
-				20,
-				234,
-				autore
-		);
+		Libro salvato = libroService.create(libroInput);
 
-		when(libroRepository.save(libro)).thenReturn(savedLibro);
+		assertEquals(libroSaved, salvato);
 
-		// Act (Esegui l'azione da testare)
-		Libro salvato = libroService.create(libro);
-
-		// Assert (Verifica)
 		assertAll("Verifica che tutte le proprietà siano corrette",
-				() -> assertEquals(savedLibro.getId(), salvato.getId(), "L'ID dovrebbe essere 1"),
-				() -> assertEquals(savedLibro.getTitolo(), salvato.getTitolo(), "Il titolo dovrebbe corrispondere"),
-				() -> assertEquals(savedLibro.getISBN(), salvato.getISBN(), "L'ISBN dovrebbe corrispondere"),
-				() -> assertEquals(savedLibro.getPagine(), salvato.getPagine(), "Il numero di pagine dovrebbe corrispondere"),
-				() -> assertEquals(savedLibro.getAutore().getNome(), salvato.getAutore().getNome(), "L'autore dovrebbe essere lo stesso")
+				() -> assertEquals(libroSaved.getId(), salvato.getId(), "L'ID dovrebbe essere 1"),
+				() -> assertEquals(libroSaved.getTitolo(), salvato.getTitolo(), "Il titolo dovrebbe corrispondere"),
+				() -> assertEquals(libroSaved.getISBN(), salvato.getISBN(), "L'ISBN dovrebbe corrispondere"),
+				() -> assertEquals(libroSaved.getPagine(), salvato.getPagine(), "Il numero di pagine dovrebbe corrispondere"),
+				() -> assertEquals(libroSaved.getAutore().getNome(), salvato.getAutore().getNome(), "L'autore dovrebbe essere lo stesso")
 		);
 
-		// Verifica che il metodo save sia stato chiamato una sola volta
-		verify(libroRepository, times(1)).save(libro);
+		verify(libroRepository, times(1)).save(eq(libroInput));
 	}
-
 }
-
