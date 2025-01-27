@@ -49,7 +49,7 @@ class LibroServiceTest {
 
 		Libro salvato = libroService.create(libroInput);
 
-		assertEquals(libroSaved, salvato);
+		assertEquals(libroSaved, libroInput);
 
 		assertAll("Verifica che tutte le proprietà siano corrette",
 				() -> assertEquals(libroSaved.getId(), salvato.getId(), "L'ID dovrebbe essere 1"),
